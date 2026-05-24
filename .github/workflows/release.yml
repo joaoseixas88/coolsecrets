@@ -83,3 +83,12 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
+
+      - name: Make GHCR package public
+        if: steps.changesets.outputs.published == 'true'
+        run: |
+          curl -s -X PATCH \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -d '{"visibility":"public"}' \
+            https://api.github.com/user/packages/container/coolsecrets-server/visibility
