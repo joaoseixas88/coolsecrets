@@ -1,0 +1,31 @@
+services:
+  coolsecrets-server:
+    image: ghcr.io/joaoseixas88/coolsecrets-server:latest
+    container_name: coolsecrets-server
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Coolify — onde os secrets vão ser sincronizados
+      COOLIFY_BASE_URL: ${COOLIFY_BASE_URL}
+      COOLIFY_API_TOKEN: ${COOLIFY_API_TOKEN}
+
+      # Infisical — origem dos secrets + verificação do webhook
+      INFISICAL_SIGNING_SECRET: ${INFISICAL_SIGNING_SECRET}
+      INFISICAL_CLIENT_ID: ${INFISICAL_CLIENT_ID}
+      INFISICAL_CLIENT_SECRET: ${INFISICAL_CLIENT_SECRET}
+
+      # Opcionais (defaults entre parênteses)
+      # PORT: "3000"
+      # HOST: "0.0.0.0"
+      # LOG_LEVEL: "info"
+      # INFISICAL_API_URL: "https://app.infisical.com"
+      # WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS: "300"
+      # SHUTDOWN_DRAIN_TIMEOUT_MS: "30000"
+
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
