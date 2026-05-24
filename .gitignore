@@ -1,0 +1,11 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+.coolsecrets.json
+.DS_Store
+*.tsbuildinfo
+.turbo
+.claude/
