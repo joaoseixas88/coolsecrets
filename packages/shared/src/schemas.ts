@@ -39,10 +39,27 @@ export class ZodSchemaValidator implements SchemaValidator {
     projectName: z.string().trim().min(1).nullable(),
   });
 
-  private readonly infisicalExportSchema = z.record(
+  private readonly infisicalExportObjectSchema = z.record(
     z.string().trim().min(1, 'Environment variable keys must not be empty.'),
     z.string(),
   );
+
+  private readonly infisicalExportArraySchema = z
+    .array(
+      z
+        .object({
+          key: z.string().trim().min(1, 'Environment variable keys must not be empty.'),
+          value: z.string(),
+        })
+        .passthrough(),
+    )
+    .transform((entries): InfisicalExport => {
+      const out: InfisicalExport = {};
+      for (const entry of entries) {
+        out[entry.key] = entry.value;
+      }
+      return out;
+    });
 
   private readonly rawCoolifyApplicationSchema = z
     .object({
@@ -114,10 +131,17 @@ export class ZodSchemaValidator implements SchemaValidator {
   }
 
   public parseInfisicalExport(value: unknown): InfisicalExport {
+    if (Array.isArray(value)) {
+      return this.parseWithSchema(
+        this.infisicalExportArraySchema,
+        value,
+        'Infisical export array must contain objects with `key` and `value` strings.',
+      );
+    }
     return this.parseWithSchema(
-      this.infisicalExportSchema,
+      this.infisicalExportObjectSchema,
       value,
-      'Infisical export payload must be a JSON object with string values.',
+      'Infisical export payload must be a JSON object with string values or an array of { key, value } entries.',
     );
   }
 
