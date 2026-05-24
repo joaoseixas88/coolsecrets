@@ -249,4 +249,49 @@ describe('createCli', () => {
     expect(stderr.read()).toBe('');
     expect(stdout.read()).toContain('Synced 1 environment variable to Platform / api.');
   });
+
+  it('accepts the array format produced by `infisical export --format=json`', async () => {
+    const stdout = createOutput();
+    const stderr = createOutput();
+    const syncApplicationEnvs = vi.fn().mockResolvedValue(undefined);
+    const payload = JSON.stringify([
+      { key: 'APP_KEY', value: 'abc', workspace: 'ws', type: 'shared', secretPath: '/' },
+      { key: 'APP_URL', value: 'https://example.test', workspace: 'ws', type: 'shared', secretPath: '/' },
+    ]);
+    const program = createCli({
+      stdin: createInput([payload]),
+      stdout: stdout.stream,
+      stderr: stderr.stream,
+      cwd: '/workspace/service',
+      configStore: {
+        readGlobalConfig: vi.fn().mockResolvedValue({
+          baseUrl: 'https://coolify.example.com',
+          apiToken: 'secret-token',
+        }),
+        saveGlobalConfig: vi.fn().mockResolvedValue(undefined),
+        readLocalBinding: vi.fn().mockResolvedValue({
+          applicationId: 'app-1',
+          applicationName: 'api',
+          projectName: 'Platform',
+        }),
+        saveLocalBinding: vi.fn().mockResolvedValue(undefined),
+      },
+      coolifyClient: {
+        listApplications: vi.fn().mockResolvedValue([]),
+        syncApplicationEnvs,
+      },
+    });
+
+    await expect(program.parseAsync(['node', 'coolsecrets', 'sync'])).resolves.toBe(program);
+
+    expect(syncApplicationEnvs).toHaveBeenCalledWith(
+      expect.anything(),
+      'app-1',
+      [
+        expect.objectContaining({ key: 'APP_KEY', value: 'abc' }),
+        expect.objectContaining({ key: 'APP_URL', value: 'https://example.test' }),
+      ],
+    );
+    expect(stdout.read()).toContain('Synced 2 environment variables to Platform / api.');
+  });
 });
