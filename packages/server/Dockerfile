@@ -15,7 +15,7 @@ COPY packages/server/src packages/server/src
 
 RUN pnpm --filter @coolsecrets/shared build && pnpm --filter @coolsecrets/server build
 
-RUN pnpm --filter @coolsecrets/server --prod deploy /out
+RUN pnpm --filter @coolsecrets/server --prod deploy --legacy /out
 
 FROM node:20-alpine AS runtime
 WORKDIR /app
